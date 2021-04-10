@@ -218,17 +218,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /*private var focusMeetingFuture: ListenableFuture<FocusMeteringResult>? = null
-    private fun startFocus(isCapture: Boolean = false) = with(binding) {
-        val factory: MeteringPointFactory = SurfaceOrientedMeteringPointFactory(
-            viewFinder.width.toFloat(), viewFinder.height.toFloat()
-        )
-        val centerWidth = viewFinder.width.toFloat() / 2
-        val centerHeight = viewFinder.height.toFloat() / 2
-        //create a point on the center of the view
-        val autoFocusPoint = factory.createPoint(centerWidth, centerHeight)
-    }*/
-
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
