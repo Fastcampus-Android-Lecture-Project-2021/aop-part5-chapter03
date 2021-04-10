@@ -52,6 +52,8 @@ class MainActivity : AppCompatActivity() {
     private var root: View? = null
     private var isCapturing: Boolean = false
 
+    private var isFlashEnabled: Boolean = false
+
     private val displayListener = object : DisplayManager.DisplayListener {
         override fun onDisplayAdded(displayId: Int) = Unit
         override fun onDisplayRemoved(displayId: Int) = Unit
@@ -123,6 +125,7 @@ class MainActivity : AppCompatActivity() {
                 preview.setSurfaceProvider(viewFinder.surfaceProvider)
                 bindCaptureListener()
                 bindZoomListener()
+                bindLightSwitchListener()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -157,6 +160,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun bindLightSwitchListener() = with(binding) {
+        flashSwitch.setOnCheckedChangeListener { _, isChecked ->
+            isFlashEnabled = isChecked
+        }
+    }
+
     private var contentUri: Uri? = null
 
     private fun captureCamera() {
@@ -168,6 +177,7 @@ class MainActivity : AppCompatActivity() {
             ).format(System.currentTimeMillis()) + ".jpg")
 
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+        if (isFlashEnabled) flashLight(true)
         imageCapture.takePicture(outputOptions, cameraExecutor, object : ImageCapture.OnImageSavedCallback {
             override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                 val savedUri = outputFileResults.savedUri ?: Uri.fromFile(photoFile)
@@ -184,16 +194,26 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    private fun flashLight(light: Boolean) {
+        val hasFlash = camera?.cameraInfo?.hasFlashUnit()
+        if (true == hasFlash) {
+            camera?.cameraControl?.enableTorch(light)
+        }
+    }
+
     private fun updateSavedImageContent() {
         contentUri?.let {
-            try {
+            isCapturing = try {
                 val file = File(PathUtil.getPath(this, it) ?: throw FileNotFoundException())
                 MediaScannerConnection.scanFile(this, arrayOf(file.path), arrayOf("image/jpeg"), null)
                 Handler(Looper.getMainLooper()).post {
                     binding.previewImageVIew.loadCenterCrop(url = it.toString(), corner = 4f)
                 }
+                if (isFlashEnabled) flashLight(false)
+                false
             } catch (e: FileNotFoundException) {
                 e.printStackTrace()
+                false
             }
         }
     }
@@ -207,8 +227,6 @@ class MainActivity : AppCompatActivity() {
         val centerHeight = viewFinder.height.toFloat() / 2
         //create a point on the center of the view
         val autoFocusPoint = factory.createPoint(centerWidth, centerHeight)
-
-
     }*/
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
