@@ -2,4 +2,6 @@
     <string name="app_name">aop-part5-chapter03</string>
     <string name="image_preview">이미지 미리보기</string>
     <string name="flash">플래시</string>
+    <string name="delete">삭제</string>
+    <string name="images_page">(%d/%d)</string>
 </resources>

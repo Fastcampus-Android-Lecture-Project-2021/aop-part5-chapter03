@@ -31,6 +31,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity() {
 
@@ -53,6 +54,8 @@ class MainActivity : AppCompatActivity() {
     private var isCapturing: Boolean = false
 
     private var isFlashEnabled: Boolean = false
+
+    private var uriList = mutableListOf<Uri>()
 
     private val displayListener = object : DisplayManager.DisplayListener {
         override fun onDisplayAdded(displayId: Int) = Unit
@@ -126,6 +129,7 @@ class MainActivity : AppCompatActivity() {
                 bindCaptureListener()
                 bindZoomListener()
                 bindLightSwitchListener()
+                bindPreviewImageViewClickListener()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -163,6 +167,12 @@ class MainActivity : AppCompatActivity() {
     private fun bindLightSwitchListener() = with(binding) {
         flashSwitch.setOnCheckedChangeListener { _, isChecked ->
             isFlashEnabled = isChecked
+        }
+    }
+
+    private fun bindPreviewImageViewClickListener() = with(binding) {
+        previewImageVIew.setOnClickListener {
+            startActivity(ImageListActivity.newIntent(this@MainActivity, uriList))
         }
     }
 
@@ -210,6 +220,7 @@ class MainActivity : AppCompatActivity() {
                     binding.previewImageVIew.loadCenterCrop(url = it.toString(), corner = 4f)
                 }
                 if (isFlashEnabled) flashLight(false)
+                uriList.add(it)
                 false
             } catch (e: FileNotFoundException) {
                 e.printStackTrace()
