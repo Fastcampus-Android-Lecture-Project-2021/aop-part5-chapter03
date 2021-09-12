@@ -2,7 +2,9 @@ package aop.fastcampus.part5.chapter03
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.hardware.display.DisplayManager
 import android.media.MediaScannerConnection
@@ -22,7 +24,9 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import aop.fastcampus.part5.chapter03.ImageListActivity.Companion.IMAGE_LIST_REQUEST_CODE
 import aop.fastcampus.part5.chapter03.databinding.ActivityMainBinding
+import aop.fastcampus.part5.chapter03.extensions.clear
 import aop.fastcampus.part5.chapter03.extensions.loadCenterCrop
 import aop.fastcampus.part5.chapter03.util.PathUtil
 import java.io.File
@@ -172,7 +176,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun bindPreviewImageViewClickListener() = with(binding) {
         previewImageVIew.setOnClickListener {
-            startActivity(ImageListActivity.newIntent(this@MainActivity, uriList))
+            startActivityForResult(
+                ImageListActivity.newIntent(this@MainActivity, uriList),
+                IMAGE_LIST_REQUEST_CODE
+            )
         }
     }
 
@@ -184,7 +191,8 @@ class MainActivity : AppCompatActivity() {
             PathUtil.getOutputDirectory(this),
             SimpleDateFormat(
                 FILENAME_FORMAT, Locale.KOREA
-            ).format(System.currentTimeMillis()) + ".jpg")
+            ).format(System.currentTimeMillis()) + ".jpg"
+        )
 
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
         if (isFlashEnabled) flashLight(true)
@@ -236,6 +244,18 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Permissions not granted by the user.", Toast.LENGTH_SHORT).show()
                 finish()
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == IMAGE_LIST_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            uriList = data?.getParcelableArrayListExtra(ImageListActivity.URI_LIST_KEY) ?: uriList
+            if (uriList.isNotEmpty()) {
+                binding.previewImageVIew.loadCenterCrop(url = uriList.first().toString(), corner = 4f)
+            } else {
+                binding.previewImageVIew.clear()
             }
         }
     }

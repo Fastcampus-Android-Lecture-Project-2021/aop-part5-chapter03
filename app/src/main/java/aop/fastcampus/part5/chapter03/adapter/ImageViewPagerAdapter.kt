@@ -8,7 +8,7 @@ import aop.fastcampus.part5.chapter03.databinding.ViewholderImageBinding
 import aop.fastcampus.part5.chapter03.extensions.loadCenterCrop
 
 class ImageViewPagerAdapter(
-    var uriList: List<Uri>
+    val uriList: MutableList<Uri>
 ) : RecyclerView.Adapter<ImageViewPagerAdapter.ImageViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ImageViewHolder {
