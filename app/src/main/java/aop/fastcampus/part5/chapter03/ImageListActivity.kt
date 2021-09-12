@@ -3,6 +3,7 @@ package aop.fastcampus.part5.chapter03
 import android.app.Activity
 import android.content.Intent
 import android.media.MediaScannerConnection
+import android.media.MediaScannerConnection.OnScanCompletedListener
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -43,6 +44,8 @@ class ImageListActivity : AppCompatActivity() {
         setupImageList(uriList)
     }
 
+    private var currentUri: Uri? = null
+
     private fun setupImageList(uriList: List<Uri>) = with(binding) {
         if (::imageViewPagerAdapter.isInitialized.not()) {
             imageViewPagerAdapter = ImageViewPagerAdapter(uriList.toMutableList())
@@ -53,14 +56,18 @@ class ImageListActivity : AppCompatActivity() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 toolbar.title = if (imageViewPagerAdapter.uriList.isNotEmpty()) {
+                    currentUri = imageViewPagerAdapter.uriList[position]
                     getString(R.string.images_page, position + 1, imageViewPagerAdapter.uriList.size)
                 } else {
+                    currentUri = null
                     ""
                 }
             }
         })
         deleteButton.setOnClickListener {
-            removeImage(uriList[imageViewPager.currentItem])
+            currentUri?.let { uri ->
+                removeImage(uri)
+            }
         }
     }
 
@@ -74,16 +81,30 @@ class ImageListActivity : AppCompatActivity() {
     private fun removeImage(uri: Uri) {
         val file = File(PathUtil.getPath(this, uri) ?: throw FileNotFoundException())
         file.delete()
-        val removedIndex = uriList.indexOf(uri)
+        val removedIndex = imageViewPagerAdapter.uriList.indexOf(uri)
         imageViewPagerAdapter.uriList.removeAt(removedIndex)
         imageViewPagerAdapter.notifyItemRemoved(removedIndex)
         binding.indicator.setViewPager(binding.imageViewPager)
-        MediaScannerConnection.scanFile(this, arrayOf(file.path), arrayOf("image/jpeg"), null)
+
+        if (imageViewPagerAdapter.uriList.isNotEmpty()) {
+            currentUri = if (removedIndex == 0) {
+                imageViewPagerAdapter.uriList[removedIndex]
+            } else {
+                imageViewPagerAdapter.uriList[removedIndex - 1]
+            }
+        }
+
+        MediaScannerConnection.scanFile(
+            this, arrayOf(file.path), arrayOf(file.name)
+        ) { _, _ ->
+            contentResolver.delete(uri, null, null)
+        }
+
         if (imageViewPagerAdapter.uriList.isEmpty()) {
             Toast.makeText(this, "삭제할 수 있는 이미지가 없습니다.", Toast.LENGTH_SHORT).show()
             onBackPressed()
         } else {
-            getString(R.string.images_page, removedIndex + 1, imageViewPagerAdapter.uriList.size)
+            binding.toolbar.title = getString(R.string.images_page, removedIndex + 1, imageViewPagerAdapter.uriList.size)
         }
     }
 
